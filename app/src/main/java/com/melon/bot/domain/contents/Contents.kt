@@ -70,7 +70,7 @@ class QuestionGame : Contents{
                     }
                 }
                 "$hostKeyword$contentsName 규칙" -> {
-                    GroupTextResponse(
+                    result = GroupTextResponse(
                         text = "[다섯 고개 규칙]\n\n" +
                             "1. 6명의 인원이 참가한다.\n" +
                             "2. 같은 카테고리의 10개 단어가 나열된다.\n" +
