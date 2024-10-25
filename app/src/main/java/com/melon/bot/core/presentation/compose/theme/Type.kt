@@ -1,4 +1,4 @@
-package com.melon.bot.ui.theme
+package com.melon.bot.core.presentation.compose.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
