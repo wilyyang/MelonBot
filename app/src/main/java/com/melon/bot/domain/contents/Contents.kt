@@ -14,17 +14,10 @@ interface Contents{
     val hostKey : String
     val category : ContentsCategory
     val commandMap : Map<String, Command>
-
-    fun handleCommand(cmd : List<String>) : Command
 }
 
 class QuestionGame : Contents{
     override val hostKey : String = "?"
     override val category: ContentsCategory = ContentsCategory.Game
     override val commandMap: Map<String, Command> = mapOf()
-
-    override fun handleCommand(cmd : List<String>){
-
-    }
-
 }
