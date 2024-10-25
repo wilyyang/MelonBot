@@ -56,25 +56,36 @@ class KakaoNotificationListener : NotificationListenerService() {
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         super.onNotificationRemoved(sbn)
 
-        firstAction?.let { firstAction ->
-            for (input in firstAction.remoteInputs ?: emptyArray()) {
-                val intent = Intent()
-                val remoteInputs = mutableMapOf<String, Any>()
+        val key = sbn?.notification?.getKey()
+        val action = sbn?.notification?.actions?.get(replyActionIndex)
+        val text = sbn?.notification?.extras?.getString(Notification.EXTRA_TEXT, "")
 
-                remoteInputs[input.resultKey] = "너무 피곤하다.."
-                val bundle = Bundle()
-                for ((inputKey, value) in remoteInputs) {
-                    bundle.putCharSequence(inputKey, value.toString())
-                }
-                RemoteInput.addResultsToIntent(firstAction.remoteInputs, intent, bundle)
+        if (sbn?.packageName == targetPackageName && key != null && action != null && !text.isNullOrBlank()) {
+            firstAction?.let { firstAction ->
 
-                try {
-                    firstAction.actionIntent.send(this, 0, intent)
-                } catch (e: PendingIntent.CanceledException) {
-                    e.printStackTrace()
+
+                Log.e("WILLY", "Removed ${sbn.key} ${key.roomName} ${key.userName} ${key.isGroupConversation} $text")
+
+                for (input in firstAction.remoteInputs ?: emptyArray()) {
+                    val intent = Intent()
+                    val remoteInputs = mutableMapOf<String, Any>()
+
+                    remoteInputs[input.resultKey] = "너무 피곤하다.."
+                    val bundle = Bundle()
+                    for ((inputKey, value) in remoteInputs) {
+                        bundle.putCharSequence(inputKey, value.toString())
+                    }
+                    RemoteInput.addResultsToIntent(firstAction.remoteInputs, intent, bundle)
+
+                    try {
+                        firstAction.actionIntent.send(this, 0, intent)
+                    } catch (e: PendingIntent.CanceledException) {
+                        e.printStackTrace()
+                    }
                 }
             }
         }
+
 
     }
 }
