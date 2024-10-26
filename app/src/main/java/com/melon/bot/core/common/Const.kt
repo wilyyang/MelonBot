@@ -7,6 +7,8 @@ const val replyActionIndex = 1
 const val openChatRoomName = "챗봇테스트용2"
 const val hostKeyword = "."
 const val helpKeyword = "?"
+const val timerKeyword = "t"
+const val endKeyword = "e"
 
 val jobArray = arrayOf(
     "의사", "간호사", "약사", "치과의사", "수의사", "임상병리사", "방사선사", "물리치료사", "임상심리사", "사회복지사",
