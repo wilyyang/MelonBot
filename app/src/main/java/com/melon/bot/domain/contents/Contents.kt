@@ -1,10 +1,8 @@
 package com.melon.bot.domain.contents
 
-import android.util.Log
+import com.melon.bot.core.common.arrayOfPlaces
 import com.melon.bot.core.common.helpKeyword
 import com.melon.bot.core.common.hostKeyword
-import com.melon.bot.core.common.jobArray
-import com.melon.bot.core.common.tag
 import com.melon.bot.domain.intent.ChatRoomKey
 
 interface Contents{
@@ -21,8 +19,8 @@ class CommonContents : Contents{
             hostKeyword + helpKeyword -> GroupTextResponse(text = "안녕하세요? 메론빵봇입니다.\n\n" +
                 "* 현재 사용 가능한 명령어\n\n" +
                 "- .다섯고개\n"+
-                "- .다섯고개 규칙\n"+
-                "- .다섯고개 종료\n")
+                "- .다섯고개규칙\n"+
+                "- .다섯고개종료\n")
             else -> None
         }
     }
@@ -35,7 +33,7 @@ class QuestionGame : Contents{
     private var hostName = ""
     private var answer = ""
     private val randomJobs : MutableList<String> = mutableListOf()
-    private val userAnswers : MutableMap<String, String> = mutableMapOf()
+    private val userAnswers : MutableList<Pair<String, String>> = mutableListOf()
 
     override fun request(chatRoomKey: ChatRoomKey, userName : String, text : String) : Command {
         var result : Command = None
@@ -52,7 +50,7 @@ class QuestionGame : Contents{
             when(text){
                 hostKeyword + contentsName -> {
                     result = if(isStart){
-                        GroupTextResponse(text = "[이미 게임 진행 중입니다.]")
+                        GroupTextResponse(text = "[이미 게임 진행 중입니다.]\n\n${answerProgressToString()}")
                     }else{
                         startGame(hostName = userName)
                         GroupTextResponse(text = "[다섯 고개 게임 시작]\n\n" +
@@ -61,7 +59,8 @@ class QuestionGame : Contents{
                             "* $hostName 님은 저에게 갠톡으로 정답을 정해주세요!")
                     }
                 }
-                "$hostKeyword$contentsName 종료" -> {
+                "$hostKeyword${contentsName} 종료",
+                "$hostKeyword${contentsName}종료" -> {
                     result = if(isStart){
                         clearGame()
                         GroupTextResponse(text = "[다섯 고개 종료]")
@@ -69,7 +68,8 @@ class QuestionGame : Contents{
                         GroupTextResponse(text = "[게임이 없습니다.]")
                     }
                 }
-                "$hostKeyword$contentsName 규칙" -> {
+                "$hostKeyword${contentsName} 규칙",
+                "$hostKeyword${contentsName}규칙" -> {
                     result = GroupTextResponse(
                         text = "[다섯 고개 규칙]\n\n" +
                             "1. 6명의 인원이 참가한다.\n" +
@@ -77,23 +77,25 @@ class QuestionGame : Contents{
                             "3. 호스트는 10개 중 하나를 선택한다.\n" +
                             "4. 5명이 순서대로 질문과 정답확인을 할 수 있다.\n" +
                             "5. 질문과 정답확인 기회는 1회뿐이다.\n" +
-                            "6. 호스트가 5개의 질문 중 최대 2번 거짓말을 할수있다."
+                            "6. 호스트가 5개의 질문 중 최대 1번 거짓말을 할수있다."
                     )
                 }
 
                 else -> {
-                    if (randomJobs.contains(text) && userAnswers[userName].isNullOrBlank() && userName != hostName) {
+
+                    if (answer.isNotBlank() && randomJobs.contains(text)
+                        && userAnswers.firstOrNull { it.first == userName } != null
+                        && userName != hostName) {
+
                         result = if(answer == text){
                             val response = "[$userName 님이 정답을 맞추셨습니다! 정답은 $text 입니다.]\n\n${answerProgressToString()}"
                             clearGame()
                             GroupTextResponse(text = response)
-                        }else if(userAnswers.containsValue(text)){
-                            val beforeUser = userAnswers.keys.first { it == text }
-
-                            GroupTextResponse(text = "[$userName 님이 말한 정답은 이미 $beforeUser 가 말한 답입니다.]\n\n${answerProgressToString()}")
+                        }else if(userAnswers.firstOrNull{ it.second == text } != null){
+                            GroupTextResponse(text = "[$userName 님이 말한 $text 는 이미 말한 답입니다.]\n\n${answerProgressToString()}")
                         }else {
                             ++step
-                            userAnswers[userName] = text
+                            userAnswers.add(userName to text)
                             var response = "$userName 님의 $text 는 정답이 아닙니다."
                             if(step > 4){
                                 response += "\n 모든 기회를 소진하여 $hostName 님이 이겼습니다. 정답은 $answer 입니다.\n\n${answerProgressToString()}"
@@ -112,8 +114,8 @@ class QuestionGame : Contents{
 
     private fun answerProgressToString() : String{
         var result = "오답 : \n"
-        result += userAnswers.map { "- ${it.key} : ${it.value}" }.joinToString("\n")
-        randomJobs.removeAll(userAnswers.values)
+        result += userAnswers.map { "- ${it.first} : ${it.second}" }.joinToString("\n")
+        randomJobs.removeAll(userAnswers.map { it.second })
         val current = randomJobs.joinToString(", ")
         result += "\n\n후보 : $current\n"
         return result
@@ -124,7 +126,7 @@ class QuestionGame : Contents{
         this.isStart = true
         this.hostName = hostName
         this.randomJobs.clear()
-        this.randomJobs.addAll(jobArray.toList().shuffled().take(10))
+        this.randomJobs.addAll(arrayOfPlaces.toList().shuffled().take(10))
         this.userAnswers.clear()
     }
 
