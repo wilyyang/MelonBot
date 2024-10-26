@@ -1,33 +1,40 @@
 package com.melon.bot.domain.contents
 
-import android.util.Log
 import com.melon.bot.core.common.arrayOfPlaces
 import com.melon.bot.core.common.helpKeyword
 import com.melon.bot.core.common.hostKeyword
 import com.melon.bot.domain.intent.ChatRoomKey
+import kotlinx.coroutines.channels.Channel
 
 interface Contents{
+    val commandChannel : Channel<Command>
     val contentsName : String
 
-    fun request(chatRoomKey: ChatRoomKey, userName : String, text : String) : Command
+    suspend fun request(chatRoomKey: ChatRoomKey, userName : String, text : String)
 }
 
-class CommonContents : Contents{
+class CommonContents(override val commandChannel : Channel<Command>) : Contents{
     override val contentsName : String = "기본"
 
-    override fun request(chatRoomKey: ChatRoomKey, userName : String, text : String) : Command {
-        return when(text){
+    override suspend fun request(chatRoomKey: ChatRoomKey, userName : String, text : String) {
+        val command = when(text){
             hostKeyword + helpKeyword -> GroupTextResponse(text = "안녕하세요? 메론빵봇입니다.\n\n" +
                 "* 현재 사용 가능한 명령어\n\n" +
+                "- t : 3분 측정 (1분 전 알림)\n"+
+                "- t {분} : 분만큼 측정\n"+
+                "- t @{닉네임}\n"+
+                "- t @{닉네임} {분}\n"+
+                "- t e : 측정 종료(측정 중일 때)\n\n"+
                 "- .다섯고개\n"+
                 "- .다섯고개규칙\n"+
                 "- .다섯고개종료\n")
             else -> None
         }
+        commandChannel.send(command)
     }
 }
 
-class QuestionGame : Contents{
+class QuestionGame(override val commandChannel : Channel<Command>) : Contents{
     private var step = 0
     override val contentsName : String = "다섯고개"
     private var isStart = false
@@ -36,11 +43,11 @@ class QuestionGame : Contents{
     private val randomJobs : MutableList<String> = mutableListOf()
     private val userAnswers : MutableList<Pair<String, String>> = mutableListOf()
 
-    override fun request(chatRoomKey: ChatRoomKey, userName : String, text : String) : Command {
-        var result : Command = None
+    override suspend fun request(chatRoomKey: ChatRoomKey, userName : String, text : String) {
+        var command : Command = None
         if(!chatRoomKey.isGroupConversation){
             if(isStart && answer.isBlank() && chatRoomKey.roomName == hostName){
-                result = if(randomJobs.contains(text)){
+                command = if(randomJobs.contains(text)){
                     answer = text
                     GroupTextResponse(text = "$hostName 님이 정답을 정했습니다. \n$hostName 님에게 질문하고 채팅에 답을 올려주세요!")
                 } else {
@@ -50,7 +57,7 @@ class QuestionGame : Contents{
         }else{
             when(text){
                 hostKeyword + contentsName -> {
-                    result = if(isStart){
+                    command = if(isStart){
                         GroupTextResponse(text = "[이미 게임 진행 중입니다.]\n\n${answerProgressToString()}")
                     }else{
                         startGame(hostName = userName)
@@ -62,7 +69,7 @@ class QuestionGame : Contents{
                 }
                 "$hostKeyword${contentsName} 종료",
                 "$hostKeyword${contentsName}종료" -> {
-                    result = if(isStart){
+                    command = if(isStart){
                         clearGame()
                         GroupTextResponse(text = "[다섯 고개 종료]")
                     }else{
@@ -71,7 +78,7 @@ class QuestionGame : Contents{
                 }
                 "$hostKeyword${contentsName} 규칙",
                 "$hostKeyword${contentsName}규칙" -> {
-                    result = GroupTextResponse(
+                    command = GroupTextResponse(
                         text = "[다섯 고개 규칙]\n\n" +
                             "1. 6명의 인원이 참가한다.\n" +
                             "2. 같은 카테고리의 10개 단어가 나열된다.\n" +
@@ -89,7 +96,7 @@ class QuestionGame : Contents{
                         && !isAlreadyUser
                         && userName != hostName) {
 
-                        result = if(answer == text){
+                        command = if(answer == text){
                             val response = "[$userName 님이 정답을 맞추셨습니다! 정답은 $text 입니다.]\n\n${answerProgressToString()}"
                             clearGame()
                             GroupTextResponse(text = response)
@@ -111,7 +118,7 @@ class QuestionGame : Contents{
                 }
             }
         }
-        return result
+        commandChannel.send(command)
     }
 
     private fun answerProgressToString() : String{

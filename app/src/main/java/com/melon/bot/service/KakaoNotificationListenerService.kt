@@ -7,11 +7,15 @@ import com.melon.bot.core.common.replyActionIndex
 import com.melon.bot.core.common.targetPackageName
 import com.melon.bot.domain.intent.ChatRoomKey
 import com.melon.bot.processor.CmdProcessor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 class KakaoNotificationListenerService : NotificationListenerService() {
 
     private val cmdProcessor = CmdProcessor(this)
-
+    private val serviceScope = CoroutineScope(Dispatchers.Default)
     override fun onNotificationPosted(sbn : StatusBarNotification?) {
         super.onNotificationPosted(sbn)
 
@@ -22,7 +26,10 @@ class KakaoNotificationListenerService : NotificationListenerService() {
         val text = sbn?.notification?.extras?.getString(Notification.EXTRA_TEXT, "")
 
         if (sbn?.packageName == targetPackageName && key != null && action != null && !userName.isNullOrBlank() && !text.isNullOrBlank()) {
-            cmdProcessor.deliverNotification(chatRoomKey = key, action = action, userName = userName, text = text)
+
+            serviceScope.launch {
+                cmdProcessor.deliverNotification(chatRoomKey = key, action = action, userName = userName, text = text)
+            }
         }
     }
 
