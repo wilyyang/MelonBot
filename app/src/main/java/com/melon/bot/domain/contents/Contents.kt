@@ -1,5 +1,6 @@
 package com.melon.bot.domain.contents
 
+import android.util.Log
 import com.melon.bot.core.common.arrayOfPlaces
 import com.melon.bot.core.common.helpKeyword
 import com.melon.bot.core.common.hostKeyword
@@ -82,16 +83,17 @@ class QuestionGame : Contents{
                 }
 
                 else -> {
-
-                    if (answer.isNotBlank() && randomJobs.contains(text)
-                        && userAnswers.firstOrNull { it.first == userName } != null
+                    val isAlreadyUser = userAnswers.firstOrNull { it.first == userName } != null
+                    val isAlreadyAnswer = userAnswers.firstOrNull{ it.second == text } != null
+                    if (answer.isNotBlank() && (randomJobs.contains(text) || isAlreadyAnswer)
+                        && !isAlreadyUser
                         && userName != hostName) {
 
                         result = if(answer == text){
                             val response = "[$userName 님이 정답을 맞추셨습니다! 정답은 $text 입니다.]\n\n${answerProgressToString()}"
                             clearGame()
                             GroupTextResponse(text = response)
-                        }else if(userAnswers.firstOrNull{ it.second == text } != null){
+                        }else if(isAlreadyAnswer){
                             GroupTextResponse(text = "[$userName 님이 말한 $text 는 이미 말한 답입니다.]\n\n${answerProgressToString()}")
                         }else {
                             ++step
