@@ -18,7 +18,7 @@ class CommonContents(override val commandChannel : Channel<Command>) : Contents{
 
     override suspend fun request(chatRoomKey: ChatRoomKey, userName : String, text : String) {
         val command = when(text){
-            hostKeyword + helpKeyword -> GroupTextResponse(text = "안녕하세요? 메론빵봇입니다.\n\n" +
+            hostKeyword + helpKeyword -> GroupTextResponse(text = "안녕하세요? 빵구봇입니다.\n\n" +
                 "* 현재 사용 가능한 명령어\n\n" +
                 "- t : 3분 측정 (1분 전 알림)\n"+
                 "- t {분} : 분만큼 측정\n"+

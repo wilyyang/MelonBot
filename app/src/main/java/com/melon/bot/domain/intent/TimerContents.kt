@@ -37,7 +37,7 @@ class TimerContents(override val commandChannel : Channel<Command>) : Contents {
                 if(isEndCommand){
                     clearTimer()
                 }
-                GroupTextResponse(text = "${if(isEndCommand) "종료 : " else ""}$info ")
+                GroupTextResponse(text = "${if(isEndCommand) "종료 $nickName : " else ""}$info ")
             }else if(!isEndCommand){
                 startTimer(minute = tempMinute, name = tempName)
                 timer.start(

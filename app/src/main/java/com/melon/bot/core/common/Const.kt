@@ -1,10 +1,10 @@
 package com.melon.bot.core.common
 
-const val tag = "메론빵봇"
+const val tag = "빵구봇"
 const val targetPackageName = "com.kakao.talk"
 const val replyActionIndex = 1
-// const val openChatRoomName = "평화토론방\uD83E\uDEBD"
-const val openChatRoomName = "챗봇테스트용2"
+const val openChatRoomName = "\uD83E\uDEBB제노 xeno 추상하는 능력을 고양시키는 대화"
+// const val openChatRoomName = "챗봇테스트용2"
 const val hostKeyword = "."
 const val helpKeyword = "?"
 const val timerKeyword = "t"
