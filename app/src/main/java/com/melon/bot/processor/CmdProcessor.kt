@@ -2,6 +2,7 @@ package com.melon.bot.processor
 
 import android.app.Notification
 import android.app.PendingIntent
+import android.app.Person
 import android.app.RemoteInput
 import android.content.Context
 import android.content.Intent
@@ -21,11 +22,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 
 class CmdProcessor(private val serviceContext: Context) {
     private val mainOpenChatRoomKey : ChatRoomKey = ChatRoomKey(isGroupConversation = true, roomName = openChatRoomName)
@@ -49,17 +48,17 @@ class CmdProcessor(private val serviceContext: Context) {
 
     }
 
-    suspend fun deliverNotification(chatRoomKey: ChatRoomKey, action : Notification.Action, userName: String, text : String){
+    suspend fun deliverNotification(chatRoomKey: ChatRoomKey, action : Notification.Action, user: Person, text : String){
         Log.i(tag, "[deliver] key : $chatRoomKey")
-        Log.i(tag, "[deliver] userName : $userName / text : $text")
+        Log.i(tag, "[deliver] userName : ${user.name} / text : $text")
         if(!chatRoomKey.isGroupConversation){
             userChatRoomMap[chatRoomKey] = action
         }else if(chatRoomKey == mainOpenChatRoomKey){
             mainOpenChatRoomAction = action
         }
-        commonContents.request(chatRoomKey = chatRoomKey, userName = userName, text = text)
-        questionGame.request(chatRoomKey = chatRoomKey, userName = userName, text = text)
-        timerContents.request(chatRoomKey = chatRoomKey, userName = userName, text = text)
+        commonContents.request(chatRoomKey = chatRoomKey, user = user, text = text)
+        questionGame.request(chatRoomKey = chatRoomKey, user = user, text = text)
+        timerContents.request(chatRoomKey = chatRoomKey, user = user, text = text)
     }
 
     private fun handleCommand(command: Command){

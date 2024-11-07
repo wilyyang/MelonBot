@@ -1,5 +1,6 @@
 package com.melon.bot.domain.intent
 
+import android.app.Person
 import android.util.Log
 import androidx.core.text.isDigitsOnly
 import com.melon.bot.core.common.tag
@@ -23,7 +24,7 @@ class TimerContents(override val commandChannel : Channel<Command>) : Contents {
     private var nickName = ""
     private val timer = Timer()
 
-    override suspend fun request(chatRoomKey: ChatRoomKey, userName : String, text : String) {
+    override suspend fun request(chatRoomKey: ChatRoomKey, user : Person, text : String) {
         val textList = text.split(" ")
 
         if(textList[0] == "t"){

@@ -1,18 +1,17 @@
 package com.melon.bot.service
 
 import android.app.Notification
+import android.app.Person
+import android.os.Bundle
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.text.SpannableString
-import android.util.Log
 import com.melon.bot.core.common.replyActionIndex
-import com.melon.bot.core.common.tag
 import com.melon.bot.core.common.targetPackageName
 import com.melon.bot.domain.intent.ChatRoomKey
 import com.melon.bot.processor.CmdProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 class KakaoNotificationListenerService : NotificationListenerService() {
@@ -25,17 +24,16 @@ class KakaoNotificationListenerService : NotificationListenerService() {
         val key = sbn?.notification?.getKey()
         val action = sbn?.notification?.actions?.get(replyActionIndex)
 
-        val userName = sbn?.notification?.extras?.getString(Notification.EXTRA_TITLE, "")
+        val user = sbn?.notification?.getPerson()
         val text = when(val textObject = sbn?.notification?.extras?.get(Notification.EXTRA_TEXT)){
             is SpannableString -> textObject.toString()
             is String -> textObject
             else -> null
         }
 
-        if (sbn?.packageName == targetPackageName && key != null && action != null && !userName.isNullOrBlank() && !text.isNullOrBlank()) {
-
+        if (sbn?.packageName == targetPackageName && key != null && action != null && user != null && !text.isNullOrBlank()) {
             serviceScope.launch {
-                cmdProcessor.deliverNotification(chatRoomKey = key, action = action, userName = userName, text = text)
+                cmdProcessor.deliverNotification(chatRoomKey = key, action = action, user = user, text = text)
             }
         }
     }
@@ -52,5 +50,15 @@ class KakaoNotificationListenerService : NotificationListenerService() {
         } else{
             null
         }
+    }
+
+    private fun Notification.getPerson() : Person? {
+        val messages = extras.getParcelableArray("android.messages")
+        if(!messages.isNullOrEmpty()){
+            messages[0]?.let { parcelable ->
+                return (parcelable as? Bundle)?.getParcelable<Person>("sender_person")
+            }
+        }
+        return null
     }
 }
